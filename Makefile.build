@@ -1,0 +1,87 @@
+# -*- makefile -*-
+
+all: lib/libcs408.a
+
+VPATH = ..
+
+CXX = g++
+CPPFLAGS = -std=c++14 -O2 -I../include
+WARNINGS = -Wno-psabi
+DEFINES =
+DEPS = -MMD -MF $(@:.o=.d)
+LDFLAGS = -L./lib -liRRAM -lgtest -lpthread -lcs408 -lmpfr -lgmp
+AR = ar
+MAKE = make
+
+# Library sources
+
+LIB_SRC  = src/simplex.cpp
+LIB_SRC += src/utils.cpp
+LIB_SRC += src/euclidean.cpp
+LIB_SRC += src/subspace.cpp
+LIB_SRC += src/scomplex.cpp
+LIB_SRC += src/tensor.cpp
+
+LIB_OBJ = $(patsubst src/%.cpp,src/%.o,$(LIB_SRC))
+LIB_DEP = $(patsubst src/%.o,src/%.d,$(LIB_OBJ))
+
+# Test sources
+
+TEST_MAIN = tests/test_main
+TEST_SRC  = $(TEST_MAIN).cpp # Main test file
+TEST_SRC += tests/test_choose.cpp
+TEST_SRC += tests/test_simplex.cpp
+TEST_SRC += tests/test_subspace.cpp
+TEST_SRC += tests/test_scomplex.cpp
+TEST_SRC += tests/test_linsol.cpp
+TEST_SRC += tests/test_tensor.cpp
+TEST_SRC += tests/test_utils.cpp
+
+TEST_OBJ = $(patsubst tests/%.cpp,tests/%.o,$(TEST_SRC))
+TEST_DEP = $(patsubst tests/%.o,tests/%.d,$(TEST_OBJ))
+
+# Example sources
+
+EX_SRC  = examples/trace.cpp
+EX_SRC += examples/point_locator.cpp
+#EX_SRC += examples/green.cpp
+#EX_SRC += examples/divergence.cpp
+
+EX_EXE = $(patsubst examples/%.cpp,examples/%,$(EX_SRC))
+EX_DEP = $(patsubst examples/%.cpp,examples/%.d,$(EX_SRC))
+
+lib/libcs408.a: lib $(LIB_OBJ)
+	$(AR) rc $@ $(LIB_OBJ)
+	ranlib $@
+lib:
+	mkdir -p $@
+
+src/%.o: src/%.cpp
+	$(CXX) -c $< -o $@ $(CPPFLAGS) $(WARNINGS) $(DEFINES) $(DEPS)
+
+tests/%.o: tests/%.cpp
+	$(CXX) -c $< -o $@ $(CPPFLAGS) $(WARNINGS) $(DEFINES) $(DEPS)
+
+examples/%: examples/%.cpp
+	$(CXX) $< -o $@ $(CPPFLAGS) $(WARNINGS) $(LDFLAGS) -MMD -MF $@.d
+
+check: $(TEST_MAIN)
+	./$(TEST_MAIN)
+
+demo: lib/libcs408.a $(EX_EXE)
+
+$(TEST_MAIN): lib/libcs408.a $(TEST_OBJ)
+	$(CXX) -o $@ $(TEST_OBJ) $(CPPFLAGS) $(WARNINGS) $(DEFINES) $(LDFLAGS)
+
+clean:
+	rm -f $(EX_EXE) $(EX_DEP)
+	rm -f $(TEST_MAIN) $(TEST_OBJ) $(TEST_DEP)
+	rm -f $(LIB_OBJ) $(LIB_DEP)
+	rm -f lib/libcs408.a
+
+Makefile: ../Makefile.build
+	cp $< $@
+
+.PHONY: all check demo clean
+
+-include $(LIB_DEP) $(TEST_DEP) $(EX_DEP)
