@@ -1,0 +1,6 @@
+[submodule "iRRAM"]
+	path = iRRAM
+	url = https://github.com/realcomputation/iRRAM
+[submodule "googletest"]
+	path = googletest
+	url = https://github.com/google/googletest/
