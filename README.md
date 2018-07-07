@@ -1,5 +1,5 @@
-# 18CS408
-programming project in Exact Real Computation
+# TCERC
+Tensor Calculus in Exact Real Computation
 
 Exact Real Computation is a new paradigm for reliable numerics and rapid numerical prototyping.
 By object-oriented overloading, a new abstract data type REAL takes care of all the hassles 
